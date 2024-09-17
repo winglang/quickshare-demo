@@ -26,6 +26,7 @@ pub class SpaceTable {
           "SK": "META#SPACE",
           "id": space.id,
           "createdAt": space.createdAt,
+          "locked": false,
         }
     );
   }
@@ -55,25 +56,60 @@ pub class SpaceTable {
       return nil;
     }
 
+    log(Json.stringify(data.Items[0]));
+
     return types.Space.fromJson(data.Items[0]);
 
   }
 
-  pub inflight getFriendById(spaceId: str, friendId: str): types.Friend? {
+  pub inflight getFriends(id:str): MutArray<types.Friend>? {
+
     let data = this.table.query(
-      KeyConditionExpression: "PK = :spaceID AND begins_with(SK, :spaceMeta)",
+      KeyConditionExpression: "PK = :spaceID AND begins_with(SK, :friendId)",
       ExpressionAttributeValues: {
-        ":spaceID": "SPACE#{spaceId}", 
-        ":spaceMeta": "FRIEND_ID#{friendId}"      
+        ":spaceID": "SPACE#{id}", 
+        ":friendId": "FRIEND_ID"      
       },
     );
 
+    let friends = MutArray<types.Friend>[];
+
     if (data.Count == 0) {
-      return nil;
+      return friends;
     }
 
-    return types.Friend.fromJson(data.Items[0]);
+    for item in data.Items {
+      friends.push(types.Friend.fromJson(item));
+    }
 
+    return friends;
+
+  }
+
+  pub inflight removeFriendById(spaceId: str, friendId: str): types.Friend? {
+
+    this.table.delete(
+      Key: {
+        "PK": "SPACE#{spaceId}",
+        "SK": "FRIEND_ID#{friendId}",
+      }
+    );
+
+    return nil;
+
+  }
+
+  pub inflight lockSpace(spaceId: str) {
+    this.table.update(
+      Key: {
+        "PK": "SPACE#{spaceId}",
+        "SK": "META#SPACE",
+      },
+      UpdateExpression: "SET locked = :locked",
+      ExpressionAttributeValues: {
+        ":locked": true,
+      }
+    );
   }
 }
 

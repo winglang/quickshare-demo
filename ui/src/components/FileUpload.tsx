@@ -6,11 +6,7 @@ interface FileUploadProps {
   removeFile: (file: File) => void;
 }
 
-export const FileUpload: React.FC<FileUploadProps> = ({
-  files,
-  addFiles,
-  removeFile,
-}) => (
+export const FileUpload: React.FC<FileUploadProps> = ({ files, addFiles, removeFile }) => (
   <div className="mb-8">
     <h2 className="text-xl font-semibold mb-4 flex items-center">
       <CloudArrowUpIcon className="h-6 w-6 mr-2 text-indigo-600" />
@@ -36,10 +32,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         <div key={index} className="relative bg-gray-100 p-4 rounded-md">
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium truncate">{file.name}</span>
-            <button
-              onClick={() => removeFile(file)}
-              className="text-red-600 hover:text-red-800"
-            >
+            <button onClick={() => removeFile(file)} className="text-red-600 hover:text-red-800">
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>

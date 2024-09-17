@@ -1,5 +1,6 @@
 import { PlusIcon, UserGroupIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
+import { Friend } from "../hooks/friends";
 
 const validateEmail = (email: string): boolean => {
   const emailInput = document.createElement("input");
@@ -10,7 +11,7 @@ const validateEmail = (email: string): boolean => {
 
 // Sub-components
 interface FriendsListProps {
-  friends: string[];
+  friends: Friend[];
   addFriend: (friend: string) => void;
   removeFriend: (friend: string) => void;
 }
@@ -24,7 +25,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   const [emailError, setEmailError] = useState<string>("");
 
   const handleAddFriend = () => {
-    if (newFriend && !friends.includes(newFriend)) {
+    if (newFriend) {
       if (validateEmail(newFriend)) {
         addFriend(newFriend);
         setNewFriend("");
@@ -70,9 +71,9 @@ export const FriendsList: React.FC<FriendsListProps> = ({
             key={index}
             className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-md"
           >
-            <span>{friend}</span>
+            <span>{friend.email}</span>
             <button
-              onClick={() => removeFriend(friend)}
+              onClick={() => removeFriend(friend.id)}
               className="text-red-600 hover:text-red-800"
             >
               <XMarkIcon className="h-5 w-5" />

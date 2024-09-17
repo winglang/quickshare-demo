@@ -8,5 +8,8 @@
   "dependencies": {
     "@winglibs/dynamodb": "^0.2.3",
     "@winglibs/vite": "^0.2.5"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.6.4"
   }
 }

@@ -2,6 +2,7 @@ pub struct Space {
   id: str;
   createdAt: str;
   expiresAt: num?;
+  locked: bool;
 }
 
 pub struct Friend {
