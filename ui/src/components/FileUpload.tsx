@@ -26,17 +26,23 @@ export const FileUpload: React.FC<FileUploadProps> = ({ files, addFiles, removeF
       >
         Select Files
       </label>
+      
     </div>
     <div className="mt-4 grid grid-cols-2 gap-4">
       {files.map((file, index) => (
         <div key={index} className="relative bg-gray-100 p-4 rounded-md">
+          
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium truncate">{file.name}</span>
             <button onClick={() => removeFile(file)} className="text-red-600 hover:text-red-800">
               <XMarkIcon className="h-5 w-5" />
+              
             </button>
           </div>
-          {file.type.startsWith("image/") ? (
+          <div className="w-full h-6   flex items-center justify-center bg-gray-200 rounded-md">
+              <span className="text-gray-500">{file.type}</span>
+            </div>
+          {/* {file.type.startsWith("image/") ? (
             <img
               src={URL.createObjectURL(file)}
               alt={file.name}
@@ -46,7 +52,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ files, addFiles, removeF
             <div className="w-full h-32 flex items-center justify-center bg-gray-200 rounded-md">
               <span className="text-gray-500">{file.type}</span>
             </div>
-          )}
+          )} */}
         </div>
       ))}
     </div>

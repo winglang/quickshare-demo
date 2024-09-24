@@ -31,6 +31,13 @@ pub class SpaceTable {
     );
   }
 
+  // pub createStream(){
+  //   // this.table.
+  //   this.table.setStreamConsumer(inflight (record) => {
+  //     record.dynamodb.NewImage
+  //   });
+  // }
+
   pub inflight addFriend(spaceId: str, friend: types.Friend) {
       this.table.put(
         Item: {
@@ -109,6 +116,20 @@ pub class SpaceTable {
       ExpressionAttributeValues: {
         ":locked": true,
       }
+    );
+  }
+
+  pub inflight addNewFile(spaceId: str, file: types.File) {
+    this.table.put(
+        Item: {
+          "PK": "SPACE#{spaceId}",
+          "SK": "FILE_ID#{file.id}",
+          "id": file.id,
+          "createdAt": file.createdAt,
+          "filename": file.filename,
+          "type": file.type,
+          "status": "PENDING",
+        }
     );
   }
 }

@@ -8,15 +8,17 @@ export const createSpace = async () => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
   }).then((res) => res.json());
-}
+};
 
 export const getSpace = async (id: string) => {
   return fetch(`${API_URL}/spaces/${id}`).then((res) => res.json());
-}
+};
 
-export const uploadFilesWithPresignedURLs = async (files: { presignedURL: string; file: File }[]) => {
+export const uploadFilesWithPresignedURLs = async (
+  files: { presignedURL: string; file: File }[]
+) => {
   const uploadPromises = files.map(({ presignedURL, file }) =>
     fetch(presignedURL, {
       body: file,
@@ -46,34 +48,53 @@ export const lockSpace = async (id: string) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
   }).then((res) => res.json());
-}
+};
 export const addFriendToSpace = async (id: string, email: string) => {
   return fetch(`${API_URL}/spaces/${id}/friends`, {
     method: "POST",
     body: JSON.stringify({ email }),
     headers: {
       "Content-Type": "application/json",
-    }
+    },
   }).then((res) => res.json());
-}
+};
 export const removeFriendFromSpace = async (id: string, email: string) => {
   return fetch(`${API_URL}/spaces/${id}/friends/${email}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
-    }
+    },
   });
-}
+};
 export const getFriendsBySpaceId = async (id: string) => {
   return fetch(`${API_URL}/spaces/${id}/friends`).then((res) => res.json());
-}
+};
 
 export const fetchFriends = async () => {
   return fetch(`${API_URL}/friends`).then((res) => res.json());
 };
 
-export const generateUploadURLForSpace = (id: string): Promise<{ url: string }> => {
-  return fetch(`${API_URL}/spaces/${id}/upload_url`).then((res) => res.json());
+export const generateUploadURLForSpace = (
+  id: string,
+  file: File
+): Promise<{ url: string }> => {
+  return fetch(`${API_URL}/spaces/${id}/upload_url`, {
+    method: "POST",
+    body: JSON.stringify({ filename: file.name, type: file.type }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((res) => res.json());
+};
+
+export const uploadFile = async (presignedURL: string, file: File) => {
+  return await fetch(presignedURL, {
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type, // The file's MIME type
+    },
+  });
 };

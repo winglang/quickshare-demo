@@ -7,6 +7,7 @@
   "wing": true,
   "dependencies": {
     "@winglibs/dynamodb": "^0.2.3",
+    "@winglibs/email": "^0.0.1",
     "@winglibs/vite": "^0.2.5"
   },
   "devDependencies": {

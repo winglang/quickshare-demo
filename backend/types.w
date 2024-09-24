@@ -10,3 +10,10 @@ pub struct Friend {
   email: str;
   createdAt: str;
 }
+
+pub struct File {
+  id: str;
+  createdAt: str;
+  filename: str;
+  type: str;
+}

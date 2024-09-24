@@ -5,11 +5,26 @@ bring dynamodb;
 bring "./types.w" as types;
 bring "./table.w" as Tables;
 
+bring email;
+
 let api = new cloud.Api({ cors: true});
 let spaceTable = new Tables.SpaceTable();
 
 let bucket = new cloud.Bucket({ cors: true}) as "Space Bucket";
 
+let emailSender = new email.Email(sender: "hello@quickshare.net");
+
+// Group APIS into its own class
+// Table new API(table);
+// Also good tests...
+
+// Raise a ticket for this....
+// bucket.onCreate(prefix: 'spaces-")
+
+
+bucket.onCreate(inflight (key: str) => {
+    // key what is .......
+});
 
 api.post("/spaces", inflight (req: cloud.ApiRequest) => {
 
@@ -50,18 +65,78 @@ api.get("/spaces/:spaceId", inflight (req: cloud.ApiRequest) => {
 
 });
 
-api.get("/spaces/:spaceId/upload_url", inflight (req: cloud.ApiRequest) => {
+struct File {
+  id: str;
+}
+
+api.post("/spaces/:spaceId/upload_url", inflight (req: cloud.ApiRequest) => {
+
+  if (req.body == nil) {
+    return cloud.ApiResponse {
+      status: 400,
+      body: "Bad Request",
+    };
+  }
 
   let spaceId = req.vars.get("spaceId");
 
+  if let payload = Json.tryParse(req.body) {
+    let filename = payload.get("filename").asStr();
+    let filetype = payload.get("type").asStr();
+    let file:types.File = { id: util.uuidv4(), createdAt: datetime.utcNow().toIso(), filename: filename, type: filetype };
+
+    // get presigned url
+    let url = bucket.signedUrl(spaceId, { 
+      action: cloud.BucketSignedUrlAction.UPLOAD,
+      duration: 2m
+    });
+
+    // add the file to the table
+    spaceTable.addNewFile(req.vars.get("spaceId"), file);  
+
+    return cloud.ApiResponse {
+      body: Json.stringify({
+        file,
+        url
+      })
+    };
+  } else {
+    return cloud.ApiResponse {
+      status: 500,
+      body: "Failed to process request",
+    };
+  }
+
+
+  // let id = util.uuidv4();
+  // let space:types.Space = { id, createdAt: datetime.utcNow().toIso(), filename:  };
+
+  // // upload the space table with new upload
+
+  
+
   // let url = bucket.signedUrl(spaceId, { 
-  //   action: cloud.BucketSignedUrlAction.DOWNLOAD,
+  //   action: cloud.BucketSignedUrlAction.UPLOAD,
   //   duration: 2m
   // });
 
-  // Fake URL for now... until SIM is fixed
-  let url = "https://my-bucket.s3.amazonaws.com/my-object.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20220101%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220101T000000Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=56b3c05c36efd4b1b34eb3a7232496c4a30f8f8f9f6fd98979d09a3f6e82744a";
+  // return cloud.ApiResponse {
+  //   body: Json.stringify({ url }),
+  // };
 
+});
+
+api.get("/spaces/:spaceId/upload_url", inflight (req: cloud.ApiRequest) => {
+
+
+  // upload the space table with new upload
+
+  let spaceId = req.vars.get("spaceId");
+
+  let url = bucket.signedUrl(spaceId, { 
+    action: cloud.BucketSignedUrlAction.UPLOAD,
+    duration: 2m
+  });
 
   return cloud.ApiResponse {
     body: Json.stringify({ url }),
@@ -89,10 +164,7 @@ api.post("/spaces/:spaceId/friends", inflight (req: cloud.ApiRequest) => {
     };
   }
 
-  // log(Json.stringify(req.body));
-
   let random = Json.tryParse(req.body);
-  log(Json.stringify(random));
 
   if let payload = Json.tryParse(req.body) {
     let email = payload.get("email").asStr();

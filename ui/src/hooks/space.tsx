@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { generateUploadURLForSpace, getSpace, lockSpace as lockSpaceAPI, uploadFilesWithPresignedURLs } from "../api";
+import { generateUploadURLForSpace, getSpace, lockSpace as lockSpaceAPI, uploadFilesWithPresignedURL, uploadFile } from "../api";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface SpaceData {
@@ -14,12 +14,14 @@ export const useUpload = (id: string) => {
   const [files, setFiles] = useState<File[]>([]);
 
   const { isPending, error, data, mutate } = useMutation({
-    mutationFn: uploadFilesWithPresignedURLs,
+    // mutationFn: uploadFilesWithPresignedURLs,
   });
 
   const uploadFiles = async (newFiles: File[]) => {
-    const { url } = await generateUploadURLForSpace(id);
-    const uploads = newFiles.map((file) => ({ file, presignedURL: url }));
+    for (const file of newFiles) {
+      const { url } = await generateUploadURLForSpace(id, file);
+      await uploadFile(url, file);
+    }
     setFiles([...files, ...newFiles]);
   };
 
