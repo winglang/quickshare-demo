@@ -132,9 +132,6 @@ pub class SpaceService {
         // let isLocked = record.dynamodb.NewImage?.tryGet("locked")?.asBool();
         // let spaceId = record.dynamodb.NewImage?.tryGet("id")?.asStr();
 
-        log("IS LOCKED {isLocked!}");
-        log("spaceID {spaceId!}");
-
         if(isLocked == true){
 
           // Get all the files for the space
