@@ -1,21 +1,21 @@
 bring "./route.w" as Route;
-bring "../models/spaces.w" as Spaces;
-bring "../models/friends.w" as Friends;
+bring "../services/spaces.w" as Spaces;
+bring "../services/friends.w" as Friends;
 bring cloud;
 bring util;
 
 struct Props {
-    spaceModel: Spaces.SpaceModel;
-    friendModel: Friends.FriendModel;
+    spaceService: Spaces.SpaceService;
+    friendsService: Friends.FriendsService;
 }
 
 pub class Routes extends Route.BaseRoute {
-    pub spaceModel: Spaces.SpaceModel;
-    pub friendModel: Friends.FriendModel;
+    pub spaceService: Spaces.SpaceService;
+    pub friendsService: Friends.FriendsService;
     new (props: Props){
         super();
-        this.spaceModel = props.spaceModel;
-        this.friendModel = props.friendModel;
+        this.spaceService = props.spaceService;
+        this.friendsService = props.friendsService;
     }
     pub init() {
         
@@ -30,7 +30,7 @@ pub class Routes extends Route.BaseRoute {
             let id = util.uuidv4();
             let space:Spaces.Space = { id, createdAt: datetime.utcNow().toIso(), locked: false };
 
-            this.spaceModel.createSpace(space);
+            this.spaceService.createSpace(space);
         
             return cloud.ApiResponse {
                 status: 201,
@@ -41,8 +41,8 @@ pub class Routes extends Route.BaseRoute {
         this.api?.get("/spaces/:spaceId", inflight (req: cloud.ApiRequest) => {
 
             let spaceId = req.vars.get("spaceId");
-            let space = this.spaceModel.getSpaceById(spaceId);
-            let friends = this.friendModel.getFriends(spaceId);
+            let space = this.spaceService.getSpaceById(spaceId);
+            let friends = this.friendsService.getFriends(spaceId);
 
             if space == nil {
                 return cloud.ApiResponse {
@@ -60,7 +60,7 @@ pub class Routes extends Route.BaseRoute {
         // lock space
         this.api?.post("/spaces/:spaceId/lock", inflight (req: cloud.ApiRequest) => {
 
-            this.spaceModel.lockSpace(req.vars.get("spaceId"));
+            this.spaceService.lockSpace(req.vars.get("spaceId"));
 
             return cloud.ApiResponse {
                 status: 200,
@@ -82,15 +82,17 @@ pub class Routes extends Route.BaseRoute {
             if let payload = Json.tryParse(req.body) {
                 let filename = payload.get("filename").asStr();
                 let filetype = payload.get("type").asStr();
+                let fileId = util.uuidv4();
 
                 let file = {
-                    id: util.uuidv4(),
+                    id: fileId,
                     createdAt: datetime.utcNow().toIso(),
                     filename: filename,
-                    type: filetype
+                    type: filetype,
+                    status: "PENDING"
                 };
 
-                let url = this.spaceModel.generateUploadURL(spaceId, file);
+                let url = this.spaceService.generateUploadURL(spaceId, file);
 
                 return cloud.ApiResponse {
                     body: Json.stringify({

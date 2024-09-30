@@ -1,22 +1,22 @@
 bring "./route.w" as Route;
-bring "../models/friends.w" as Friends;
+bring "../services/friends.w" as Friends;
 bring cloud;
 bring util;
 
 struct Props {
-    friendModel: Friends.FriendModel;
+    friendsService: Friends.FriendsService;
 }
 
 pub class Routes extends Route.BaseRoute {
-    pub friendModel: Friends.FriendModel;
+    pub friendsService: Friends.FriendsService;
     new (props: Props){
         super();
-        this.friendModel = props.friendModel;
+        this.friendsService = props.friendsService;
     }
     pub init() {
         this.api?.get("/spaces/:spaceId/friends", inflight (req: cloud.ApiRequest) => {
 
-            let friends = this.friendModel.getFriends(req.vars.get("spaceId"));
+            let friends = this.friendsService.getFriends(req.vars.get("spaceId"));
 
             if friends == nil {
                 return cloud.ApiResponse {
@@ -45,7 +45,7 @@ pub class Routes extends Route.BaseRoute {
             if let payload = Json.tryParse(req.body) {
                 let email = payload.get("email").asStr();
                 let friend:Friends.Friend = { id: util.uuidv4(), createdAt: datetime.utcNow().toIso(), email: email };
-                this.friendModel.addFriend(req.vars.get("spaceId"), friend);
+                this.friendsService.addFriend(req.vars.get("spaceId"), friend);
                 return cloud.ApiResponse {
                     body: Json.stringify(friend)
                 };
@@ -59,7 +59,7 @@ pub class Routes extends Route.BaseRoute {
         });
 
         this.api?.delete("/spaces/:spaceId/friends/:friendId", inflight (req:cloud.ApiRequest) => {
-            this.friendModel.removeFriendById(req.vars.get("spaceId"),req.vars.get("friendId"));
+            this.friendsService.removeFriendById(req.vars.get("spaceId"),req.vars.get("friendId"));
 
             return cloud.ApiResponse {
                 status: 200,

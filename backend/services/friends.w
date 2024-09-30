@@ -9,7 +9,7 @@ pub struct Friend {
 }
 
 
-pub class FriendModel {
+pub class FriendsService {
     db: Database.Instance;
     new(db: Database.Instance) {
         this.db = db;
