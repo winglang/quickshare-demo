@@ -77,7 +77,7 @@ pub class SpaceService {
   }
 
   pub inflight generateUploadURL(spaceId: str, file:File): str {
-    let url = this.bucket.signedUrl("{spaceId}:{file.id}", { 
+    let url = this.bucket.signedUrl("spaces/{spaceId}/{file.id}", { 
       action: cloud.BucketSignedUrlAction.UPLOAD,
       duration: 2m
     });
@@ -120,9 +120,20 @@ pub class SpaceService {
 
     // Listen for when the table changes to locked and add messages to queue to be processed
     this.db.table.setStreamConsumer(inflight (record: dynamodb.StreamRecord) => {
+
+      log(Json.stringify(record));
+
       if(record.eventName == "MODIFY"){
+
+        // Is Wing simulator diff to production? 
+
         let isLocked = record.dynamodb.NewImage?.tryGet("locked")?.tryGet("BOOL")?.asBool();
         let spaceId = record.dynamodb.NewImage?.tryGet("id")?.tryGet("S")?.asStr();
+        // let isLocked = record.dynamodb.NewImage?.tryGet("locked")?.asBool();
+        // let spaceId = record.dynamodb.NewImage?.tryGet("id")?.asStr();
+
+        log("IS LOCKED {isLocked!}");
+        log("spaceID {spaceId!}");
 
         if(isLocked == true){
 
@@ -140,6 +151,11 @@ pub class SpaceService {
             files.push(File.fromJson(item));
           }
 
+          // No files to send, just skip.
+          if(files.length == 0){
+            return;
+          }
+
           let freinds = friends.getFriends(spaceId!);
 
           // No friends in space, just skip.
@@ -147,32 +163,39 @@ pub class SpaceService {
             return;
           }
 
+          // Send email to all friends with download links
           let recipients = MutArray<str>[];
+          let var message:str = "";
 
           for friend in freinds! {
             recipients.push(friend.email);
           }
 
-          notifications.addEmailToQueue(recipients);
-
-          // For 
+          // Get 10 minute downloadable links for each code.
           for file in files {
-            if(file.status == "COMPLETE"){
-              log("File is complete {file.filename}");
-            }
+            let url = this.bucket.signedUrl("spaces/{spaceId!}/{file.id}", { 
+              action: cloud.BucketSignedUrlAction.DOWNLOAD,
+              duration: 10m
+            });
+
+            message = message + "Download link: {url}\n";
           }
-          
+
+          notifications.addEmailToQueue(recipients, message);
+
         }
       }
-    });
+    }, { startingPosition: "LATEST" });
 
     // mark files that they have been uploaded and complete
     this.bucket.onCreate(inflight (key: str) => {
 
+      log(key);
+
       // Split the key
-      let parts = key.split(":");
-      let spaceId = parts[0];
-      let fileId = parts[1];
+      let parts = key.split("/");
+      let spaceId = parts[1];
+      let fileId = parts[2];
 
       this.db.table.update(
         Key: {
@@ -188,34 +211,8 @@ pub class SpaceService {
         }
       );
 
-      log("COMPLETE....");
-
     });
   }
 
-  // When the space becomes locked, then send the emails.
-
-  
    
 }
-
-// Set a TTL on the DDB file upload record if nothing has been uploaded in 3minutes
-// After 3 minutes the record is deleted when no files have been uploaded....
-
-// store.onCreate(inflight (key: str) => {
-//   let data = store.get(key);
-//   if !key.endsWith(".log") {
-//     copies.put(key, data);
-//   }
-// });
-
-/**
-TODO:
-
-- When we create a signed URL set TTL on the URL for 3min
-- Set TTL on the item in DB for 4mins, or schedule in 4 mins will delete if still pending.....
-- Add ability to upload in the frontend client using signed url
-- on Create update database value to move from pending to complete
-- Listen for DDB changes on table, when pending goes to complete, then check all are complete, then send the emails.
-
-*/

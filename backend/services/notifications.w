@@ -31,21 +31,24 @@ pub class NotificationService {
 
     }
 
-    pub inflight addEmailToQueue(recipients: MutArray<str>) {
+    pub inflight addEmailToQueue(recipients: MutArray<str>, message: str) {
         for email in recipients {
-            this.queue.push(Json.stringify({email}));
+            this.queue.push(Json.stringify({email, message}));
         }
     }
 
     pub inflight sendEmail(message: str) {
+
+        let msg = Json.parse(message);
+        let email = msg.get("email").asStr();
+        let text = msg.get("message").asStr();
+
         this.email.send({
-            to: ["hello@test.com"],
-            subject: "You have been sent a new temporary file",
-            text: "Your friend has used Quick share to send you some files."
+            to: [email],
+            subject: "You have been sent some new files to download",
+            text: "Your friend has used Quick share to send you some files. /n {text}"
         });
 
-        log("SEND THE EMAIL!, {message}");
-        // Send the email! with attachments? S3 info here for download?
     }
    
 }
